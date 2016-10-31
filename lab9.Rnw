@@ -1,0 +1,117 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage[sc]{mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{url}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false]
+ {hyperref}
+\hypersetup{
+ pdfstartview={XYZ null null 1}}
+\usepackage{breakurl}
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+
+<<setup, include=FALSE, echo=FALSE, cache=FALSE>>=
+library(knitr)
+library(xtable)
+library(pander)
+# set global chunk options
+opts_chunk$set(fig.path='figure/minimal-', fig.align='center', fig.show='hold')
+options(formatR.arrow=TRUE,width=90)
+@
+
+\title{Lab 9: Simple Regression}
+\author{Abigail Chaver}
+\date{\today}
+
+\maketitle
+
+
+\section{Abstract}
+
+In this paper, we analyze a dataset containing continuous values for $Sales$, $Audio$, $Radio$, and $TV$. We attempt to establish a linear relationship between $Sales$ and $TV$ through simple one-variable linear regression, providing some visualization of the data and results of the model. This paper is supported by a similar analysis in Chapter 3 of \emph{An Introduction to Statistical Learnin}g, by Gareth James, Daniela Witten, Trevor Hastie, and Robert Tibshirani.
+
+\section{Introduction}
+We are typically concerned with two types of analysis: prediction and inference. In the case of prediction, we are interested in converting a vector of predictors into a target variable through some model: our primary concern is to accurately predict what the target variable will be given predictor values that we haven't seen before. In inference, we are more interested in providing interpretable results about the relationship between two quantities, where we may hope that there is a causal relationship.
+
+In this analysis, we are focused on inference: we wish to understand how spending on television advertising impacts sales. If there is a strong positive relationship, it may benefit the bottom line to increase or maintain TV spending; if there is no relationship or possibly a negative correlation, we may consider decreasing TV budgets.
+
+\section{Data}
+We are analyzing a set of 200 observations across 4 variables: the target, $Sales$, and three predictors, $TV$, $Radio$, and $Newspaper$. $Sales$ represents number of sales of a particular product in thousands, while $TV$, $Radio$, and $Newspaper$ represent dollar amounts of the advertising budget for each form of media respectively. In this analysis we will only consider $TV$, of the three predictors.
+
+We can do a preliminary visual exploration of the two relevant variables, $TV$ and $Sales$, to get a sense of their distributions (see next page).
+
+\begin{figure}
+\centerline{
+\includegraphics[
+width=0.5\textwidth]{../images/histogram-sales}}
+\caption{The distribution of sales across markets looks approximately normal.}
+\end{figure}
+
+\begin{figure}
+\centerline{
+\includegraphics[
+width=0.5\textwidth]{../images/histogram-tv}}
+\caption{Spending on TV advertising looks fairly uniform.}
+\end{figure}
+
+We then proceed to modeling the relationship between the two variables.
+
+\section{Methodology}
+
+A linear  model is almost never \emph{true}: if there is a relationship between two variables, it is almost invariably more complicated than linear. However, linear models are surprisingly useful for prediction, and are very easy to interpret. They're also quite easy to compute -  these three properties have made them popular in analysis for a long time.
+
+A one variable linear model is often written as
+$$ Y = \beta_{0} + \beta_{1}X $$
+Where Y is the target variable and X is the predictor or input variable.
+
+For this analysis, our model is 
+$$Sales = \beta_{0} + \beta_{1}TV$$
+
+$\beta_{0}$ is simply an intercept which translates the line of best fit. $\beta_{1}$ is the figure we are particularly interested in. A positive $\beta_{1}$ indicates a positive correlation: more TV spending is associated with higher Sales. We are interested in how large $\beta_{1}$ might be, as this indicates the strength of the relation. However, we must also look at its \emph{significance} to understand whether a relationship actually exists - just because we find a nonzero $\beta_{1}$ does not imply that there is a true relationship. We use the t-test to evaluate how likely it is that the true $\beta_{1}$ is actually zero, and that our estimate $\hat\beta_{1}$'s distance from zero is due to chance.
+
+\section{Results}
+We compute the linear model by regressing TV on Sales to perform inference:
+
+<< echo=FALSE, results=tex >>=
+load("../data/regression.Rdata")
+xtable(fit, caption="Summary of Linear Regression Model of TV on Sales" )
+#panderOptions("digits", 2)
+#pander(fit, caption = "Summary of Linear Regression Model of TV on Sales")
+@
+
+
+
+As mentioned before, we are particularly interested in $\beta_{1}$ and its signficance. While the coefficient seems small, at `0.05`, we see that the t-statistic is quite large, making it very significant. It's important to keep in mind that the value of a coefficient is highly dependent on the units of the variables and how they are scaled, so we are most interested in whether $\beta_{1}$ is positive and how significant it is. In this case, there is a strong positive correlation between TV budget and sales figures.
+
+We will now evaluate how well the model fits the data. We can perform a scatterplot to get a visual impression of their relationship, and we will plot our linear model on top to see how accurate our model seems.
+
+\begin{figure}
+\centerline{
+\includegraphics{../images/scatterplot-tv-sales}}
+\caption{Scatterplot of TV and Sales, with regression line}
+\end{figure}
+
+We can see that the relationship is positive, but clearly non-linear. The data is heteroskedastic and looks more like a log function than a linear one. However, our linear model may still be useful for interpretation. We compute some other goodness-of-fit statistics to evaluate how far off our model is.
+
+<< echo=FALSE, results=tex>>=
+Rsq <- summ$r.squared
+RSE <- summ[[6]]
+fstat <- summ$fstatistic['value']
+Statistic <- c("R-squared", "Residual Standard Error", "F-statistic")
+Value <- c(Rsq, RSE, fstat)
+fit_table <- data.frame(Statistic, Value)
+xtable(fit_table, caption="Goodness of Fit Statistics")
+@
+
+\section{Conclusions}
+From our analysis, we can see that our model fits the data acceptably but not *exceptionally*. There is a strong positive relationship between our predictor and target variable, but upon visual inspection we can see that the relationship is not linear. However, our R-squared value is not atrocious, and this linear model may provide some value.
+
+\end{document}
